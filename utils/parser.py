@@ -1,8 +1,11 @@
-from api.imports import pandas as pd
+from api.imports import pandas as pd, Path, re
 from constants.normalize_metrics import X_MIN, X_MAX
 
+
 def parse_mappings() :
-    df = pd.read_csv("../constants/signals_mapping.csv")
+    base_dir = Path(__file__).resolve().parent
+    path_to_csv = base_dir / "../constants/signals_mapping.csv"
+    df = pd.read_csv(path_to_csv)
     weights_map = {}
     thresholds_map = {}
 
@@ -24,7 +27,7 @@ def parse_mappings() :
 
     return weights_map , thresholds_map
 
-def parse_threshold(text : str) :
+def parse_threshold(text : str , signal : str) :
     tokens = text.split(" ")
     if len(tokens) < 3 :
         return None , None

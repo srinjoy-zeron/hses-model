@@ -4,7 +4,7 @@ from utils.normalize import normalize
 from utils.multiplier import time_of_day_multiplier , session_length_multiplier , noise_environment_multiplier
 
 from constants.state_modifiers import STATE_MODIFIERS_MAPPINGS
-from constants.exploit_modifiers import ACCESS_LEVEL_MAPPINGS , ATTACKING_SKILL_MAPPINGS , USER_INTERACTION_MAPPINGS , PUBLIC_CTC_MAPPINGS , PRIVATE_CTC_MAPPINGS , CTC_SCALING_CONSTANT
+from constants.exploit_modifiers import ACCESS_LEVEL_MAPPINGS , ATTACKING_SKILL_MAPPINGS , USER_INTERACTION_MAPPINGS , PUBLIC_CTC_MAPPINGS , PRIVATE_CTC_MAPPINGS
 from constants.exploit_scenarios import EXPLOIT_SCENARIOS
 
 class Session_Class():
@@ -19,11 +19,11 @@ class Session_Class():
         self.signal_weights = {}
         self.state = None
         self.base_score = 0.0
-        self.total_score = 0.0
+        self.score = 0.0
         self.multiplier = 1.0
         self.exploit_modifier = 1.0
         self.exploit_scenarios = []
-        self.exploit_band = ""
+        self.exploit_band = None
 
     
 
@@ -33,7 +33,7 @@ class Session_Class():
         if signal not in self.thresholds_map[state] :
             return False
 
-        operator , threshold_value = parse_threshold(self.thresholds_map[state][signal])
+        operator , threshold_value = parse_threshold(self.thresholds_map[state][signal] , signal)
 
         if operator is None or threshold_value is None :
             return False
@@ -68,11 +68,22 @@ class Session_Class():
                 EVIDENCE_POSITIVE = "POSITIVE"
                 EVIDENCE_NEGATIVE = "NEGATIVE"
 
-                threshold_verdict = EVIDENCE_NEGATIVE in self.weights_map[state][signal] and check_threshold(state , signal , self.signals_values[signal])
-                threshold_verdict = EVIDENCE_NEGATIVE if threshold_verdict else EVIDENCE_POSITIVE
+                threshold_verdict = self.check_threshold(state , signal , self.signals_values[signal])
 
-                total_weight += self.weights_map[state][signal][threshold_verdict] * self.signals_values[signal]
-                self.signal_weights[signal] += self.weights_map[state][signal][threshold_verdict] * self.signals_values[signal]
+                if EVIDENCE_NEGATIVE in self.weights_map[state][signal] and threshold_verdict :
+                    total_weight += self.weights_map[state][signal][EVIDENCE_NEGATIVE] * self.signals_values[signal]
+                    self.signal_weights[signal] += self.weights_map[state][signal][EVIDENCE_NEGATIVE] * self.signals_values[signal]
+
+                elif EVIDENCE_POSITIVE in self.weights_map[state][signal] :
+                    total_weight += self.weights_map[state][signal][EVIDENCE_POSITIVE] * self.signals_values[signal]
+                    self.signal_weights[signal] += self.weights_map[state][signal][EVIDENCE_POSITIVE] * self.signals_values[signal]
+
+
+                #threshold_verdict = EVIDENCE_NEGATIVE in self.weights_map[state][signal] and self.check_threshold(state , signal , self.signals_values[signal])
+                #threshold_verdict = EVIDENCE_NEGATIVE if threshold_verdict else EVIDENCE_POSITIVE
+
+                #total_weight += self.weights_map[state][signal][threshold_verdict] * self.signals_values[signal]
+                #self.signal_weights[signal] += self.weights_map[state][signal][threshold_verdict] * self.signals_values[signal]
 
             self.state_weights[state] = total_weight
 
@@ -93,7 +104,7 @@ class Session_Class():
     def calculate_multipliers(self , environmental_factor : str) :
         self.t_factor = max(1e-2 , time_of_day_multiplier(self.time_of_day))
         self.sl_factor = max(1e-2 , session_length_multiplier(self.session_length))
-        self.nev_factor = max(1e-2 , noise_environment_multiplier(self.noise_score))
+        self.nev_factor = max(1e-2 , noise_environment_multiplier(self.noise_score , environmental_factor))
 
         self.multiplier = (self.t_factor * self.sl_factor * self.nev_factor) ** (1/3)
 
@@ -116,7 +127,7 @@ class Session_Class():
             ctc_mapping_obj = Mapping_Class(PRIVATE_CTC_MAPPINGS)
         self.ctc_factor = ctc_mapping_obj.map(company_resources_stake)
 
-        self.exploit_modifier = (self.al_factor * self.as_factor * self.ui_factor * self.ctc_factor) * CTC_SCALING_CONSTANT
+        self.exploit_modifier = (self.al_factor * self.as_factor * self.ui_factor * self.ctc_factor) ** (0.25)
 
 
         
@@ -134,20 +145,20 @@ class Session_Class():
 
     # 6th run this
     def get_exploit_scenario(self) :
-        if state not in EXPLOIT_SCENARIOS or score < 30:
+        if self.state not in EXPLOIT_SCENARIOS or self.score < 30:
             return 
 
         severity_col = ""
 
-        if 30 <= score < 60:
+        if 30 <= self.score < 60:
             severity_col = "high"
-        elif 60 <= score < 80:
+        elif 60 <= self.score < 80:
             severity_col = "very_high"
         else:
             severity_col = "critical"
 
-        for code in EXPLOIT_SCENARIOS[state] :
-            curr_scenario = EXPLOIT_SCENARIOS[state][code]
+        for code in EXPLOIT_SCENARIOS[self.state] :
+            curr_scenario = EXPLOIT_SCENARIOS[self.state][code]
             if curr_scenario["severity"] == severity_col :
                 self.exploit_scenarios.append(curr_scenario["name"])
 
