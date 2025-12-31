@@ -1,0 +1,9 @@
+# .env files
+api/.env
+
+# virtual environment 
+venv
+__pycache__
+
+# logging and montoring
+*.log
