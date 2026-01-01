@@ -6,7 +6,8 @@ def time_of_day_multiplier(time_str):
     if time_str is None : 
         return 1.0
 
-    minutes = datetime.strptime(time_str, "%H:%M").hour * 60
+    minutes = datetime.strptime(time_str, "%H:%M").hour * 60 + datetime.strptime(time_str, "%H:%M").minute
+
     if minutes is None : 
         return 1.0
 

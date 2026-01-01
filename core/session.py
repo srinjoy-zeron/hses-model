@@ -115,8 +115,8 @@ class Session_Class():
         access_level_mapping_obj = Mapping_Class(ACCESS_LEVEL_MAPPINGS)
         self.al_factor = access_level_mapping_obj.map(access_level)
 
-        attacking_skill_mappping_obj = Mapping_Class(ACCESS_LEVEL_MAPPINGS)
-        self.as_factor = access_level_mapping_obj.map(attacking_skill)
+        attacking_skill_mappping_obj = Mapping_Class(ATTACKING_SKILL_MAPPINGS)
+        self.as_factor = attacking_skill_mappping_obj.map(attacking_skill)
 
         user_interaction_mapping_obj = Mapping_Class(USER_INTERACTION_MAPPINGS)
         self.ui_factor = user_interaction_mapping_obj.map(user_interaction)

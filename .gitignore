@@ -1,5 +1,6 @@
 # .env files
-api/.env
+.env
+.env.local
 
 # virtual environment 
 venv
@@ -7,3 +8,4 @@ __pycache__
 
 # logging and montoring
 *.log
+*.test.json
