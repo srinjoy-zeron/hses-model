@@ -25,6 +25,8 @@ class Session_Class():
         self.exploit_scenarios = []
         self.exploit_band = None
 
+        self.SIGNALS_SCALING_FACTOR = 10/7
+
     
 
     def check_threshold(self , state: str , signal: str , signal_value: float) :
@@ -139,7 +141,7 @@ class Session_Class():
         for state in self.state_weights :
             _base_score += state_mapping_obj.map(state) * self.state_weights[state]
         
-        self.base_score = _base_score
+        self.base_score = _base_score * self.SIGNALS_SCALING_FACTOR
         self.score = self.base_score * self.multiplier * self.exploit_modifier
 
 
