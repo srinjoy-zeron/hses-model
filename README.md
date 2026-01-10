@@ -91,4 +91,4 @@ This project is an initiative of the **Zeron Research Team**.
 - [adevansh078](https://github.com/adevansh078)
 - [KrishRandar](https://github.com/KrishRandar)
 - [faux16](https://github.com/faux16)
-For more information, visit [zeron.one](https://zeron.one).
+
